@@ -2,8 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 # Load the Real Image
-image = cv2.imread('/content/10-11318_6044-PG_07-2Dgraphic-1.png',
-cv2.IMREAD_GRAYSCALE)
+image = cv2.imread('/content/10-11318_6044-PG_07-2Dgraphic-1.png', cv2.IMREAD_GRAYSCALE)
 # Step 1: Enhance Image Contrast
 clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(25, 25))
 enhanced_image = clahe.apply(image)
@@ -23,8 +22,7 @@ plt.imshow(cleaned_mask, cmap='gray')
 plt.title("Cleaned Mask After Morphological Opening")
 plt.show()
 # Step 4: Connected Component Analysis to Filter Regions by Size
-num_labels, labels, stats, _ =
-cv2.connectedComponentsWithStats(cleaned_mask, connectivity=8)
+num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(cleaned_mask, connectivity=8)
 # Create Filtered Mask
 min_area = 200 # Minimum area threshold for keeping components
 filtered_mask = np.zeros_like(cleaned_mask)
@@ -44,8 +42,7 @@ plt.imshow(final_mask, cmap='gray')
 plt.title("Final Mask After Dilation")
 plt.show()
 # Step 6: Apply the Final Mask to the Original Image
-output_image = cv2.bitwise_and(enhanced_image, enhanced_image,
-mask=final_mask)
+output_image = cv2.bitwise_and(enhanced_image, enhanced_image,mask=final_mask)
 # Visualize Final Output Image
 plt.figure(figsize=(10, 10))
 plt.subplot(1, 3, 1)
@@ -64,8 +61,7 @@ edges = cv2.Canny(output_image, 100, 200)
 kernel_crack = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 refined_edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel_crack)
 # Calculate Crack Area
-contours, _ = cv2.findContours(refined_edges, cv2.RETR_EXTERNAL,
-cv2.CHAIN_APPROX_SIMPLE)
+contours, _ = cv2.findContours(refined_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 crack_area = sum(cv2.contourArea(contour) for contour in contours)
 print("Total Crack Area (in pixels):", crack_area)
 # Visualize Detected Cracks
@@ -74,35 +70,26 @@ plt.imshow(refined_edges, cmap='gray')
 plt.title("Detected Cracks")
 plt.show()
 # Step 8: Delaminated Region Detection (Improved)
-substrate_mask = cv2.inRange(output_image, 150, 256) # Adjusted threshold
-for substrate
-coating_mask = cv2.inRange(output_image, 0,180) # Adjusted threshold
-for coating
-black_gap_mask = cv2.inRange(output_image, 0, 80) # Adjusted black gap
-threshold
+substrate_mask = cv2.inRange(output_image, 150, 256) # Adjusted threshold for substrate
+coating_mask = cv2.inRange(output_image, 0,180) # Adjusted threshold for coating
+black_gap_mask = cv2.inRange(output_image, 0, 80) # Adjusted black gap threshold
 # Morphological operations to bridge potential gaps
 kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-dilated_substrate = cv2.dilate(substrate_mask, kernel_dilate,
-iterations=2)
+dilated_substrate = cv2.dilate(substrate_mask, kernel_dilate, iterations=2)
 dilated_coating = cv2.dilate(coating_mask, kernel_dilate, iterations=2)
 # Combine masks to isolate delaminated regions
-delaminated_mask = cv2.bitwise_and(black_gap_mask,
-cv2.bitwise_and(dilated_substrate, dilated_coating))
+delaminated_mask = cv2.bitwise_and(black_gap_mask,cv2.bitwise_and(dilated_substrate, dilated_coating))
 # Post-processing to remove noise and refine delaminated areas
-delaminated_mask = cv2.morphologyEx(delaminated_mask, cv2.MORPH_OPEN,
-kernel_dilate)
-delaminated_mask = cv2.morphologyEx(delaminated_mask, cv2.MORPH_CLOSE,
-kernel_dilate)
+delaminated_mask = cv2.morphologyEx(delaminated_mask, cv2.MORPH_OPEN, kernel_dilate)
+delaminated_mask = cv2.morphologyEx(delaminated_mask, cv2.MORPH_CLOSE, kernel_dilate)
 # Visualize Detected Delaminated Regions
 plt.figure(figsize=(6, 6))
 plt.imshow(delaminated_mask, cmap='gray')
 plt.title("Improved Detected Delaminated Regions")
 plt.show()
 # Calculate Delaminated Area
-delaminated_contours, _ = cv2.findContours(delaminated_mask,
-cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-delaminated_area = sum(cv2.contourArea(contour) for contour in
-delaminated_contours)
+delaminated_contours, _ = cv2.findContours(delaminated_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+delaminated_area = sum(cv2.contourArea(contour) for contour in delaminated_contours)
 print("Total Delaminated Area (in pixels):", delaminated_area)
 # Final Visualization
 final_output = cv2.bitwise_or(refined_edges, delaminated_mask)
